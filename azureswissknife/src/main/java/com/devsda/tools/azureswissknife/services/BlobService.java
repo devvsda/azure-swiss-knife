@@ -6,6 +6,7 @@ import com.microsoft.azure.storage.blob.*;
 import com.microsoft.azure.storage.blob.models.BlockBlobUploadResponse;
 import com.microsoft.azure.storage.blob.models.ContainerCreateResponse;
 import com.microsoft.rest.v2.http.HttpPipeline;
+import com.microsoft.rest.v2.util.FlowableUtil;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 
@@ -90,39 +91,12 @@ public class BlobService {
 
         DownloadResponse downloadResponse = downloadResponseSingle.blockingGet();
 
+        Single<ByteBuffer> byteBufferSingle = FlowableUtil.collectBytesInBuffer(downloadResponse.body(null));
 
-//        // Create the container on the service (with no metadata and no public access)
-//        containerURL.create(null, null, null)
-//                .flatMap(containersCreateResponse ->
-//                        /*
-//                         Create the blob with string (plain text) content.
-//                         NOTE: It is imperative that the provided length matches the actual length exactly.
-//                         */
-//                        blobURL.upload(Flowable.just(ByteBuffer.wrap(data.getBytes())), data.length(),
-//                                null, null, null, null))
-//                .flatMap(blobsDownloadResponse ->
-//                        // Download the blob's content.
-//                        blobURL.download(null, null, false, null))
-//                .flatMap(blobsDownloadResponse ->
-//                        // Verify that the blob data round-tripped correctly.
-//                        FlowableUtil.collectBytesInBuffer(blobsDownloadResponse.body(null))
-//                                .doOnSuccess(byteBuffer -> {
-//                                    if (byteBuffer.compareTo(ByteBuffer.wrap(data.getBytes())) != 0) {
-//                                        throw new Exception("The downloaded data does not match the uploaded data.");
-//                                    }
-//                                }))
-//                .flatMap(byteBuffer ->
-//                        // Delete the blob we created earlier.
-//                        blobURL.delete(null, null, null))
-//                .flatMap(blobsDeleteResponse ->
-//                        // Delete the container we created earlier.
-//                        containerURL.delete(null, null))
-                /*
-                This will synchronize all the above operations. This is strongly discouraged for use in production as
-                it eliminates the benefits of asynchronous IO. We use it here to enable the sample to complete and
-                demonstrate its effectiveness.
-                 */
-//                .blockingGet();
+        ByteBuffer byteBufferImageData = byteBufferSingle.blockingGet();
+
+        // TODO : Store somewhere, for further usecase.
+        
     }
 
     public void createContainer(String accountName, String accountKey, String containerName) {
