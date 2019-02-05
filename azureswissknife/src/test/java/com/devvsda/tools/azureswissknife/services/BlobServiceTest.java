@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 
 public class BlobServiceTest {
 
@@ -38,5 +39,20 @@ public class BlobServiceTest {
         String imageLocation = "IMAGE_LOCATION";
 
         blobService.uploadBlob(accountName, accountKey, containerName, blockName, imageLocation);
+    }
+
+    @Test
+    public void generateBlobLinkTest() throws InvalidKeyException{
+
+        String accountName = "cricket2";
+        String accountKey = "KEY";
+
+        String containerName = "CONTAINER_NAME";
+        String blockName = "BLOB_NAME";
+
+        String publicURL = blobService.generatePublicURL(accountName, accountKey, containerName, blockName);
+
+        System.out.println(publicURL);
+
     }
 }

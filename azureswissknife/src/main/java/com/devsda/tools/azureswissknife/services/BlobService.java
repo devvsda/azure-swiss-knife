@@ -6,7 +6,6 @@ import com.microsoft.azure.storage.blob.*;
 import com.microsoft.azure.storage.blob.models.BlockBlobUploadResponse;
 import com.microsoft.azure.storage.blob.models.ContainerCreateResponse;
 import com.microsoft.rest.v2.http.HttpPipeline;
-import com.microsoft.rest.v2.util.FlowableUtil;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 
@@ -15,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
+import java.time.OffsetDateTime;
 import java.util.Locale;
 
 public class BlobService {
@@ -145,6 +145,62 @@ public class BlobService {
         Single<ContainerCreateResponse> containerCreateResponseSingle = containerURL.create(null, null, null);
 
         ContainerCreateResponse containerCreateResponse = containerCreateResponseSingle.blockingGet();
+
+    }
+
+    public String generatePublicURL(String accountName, String accountKey, String containerName, String blobName) throws InvalidKeyException  {
+
+        ServiceURL serviceURL = null;
+
+        try {
+            serviceURL = getServiceInstance(accountName, accountKey);
+        } catch(InvalidKeyException | MalformedURLException e) {
+            throw new InvalidCredentialsException("Invalid Credentails of Azure Storage Account", e);
+        }
+
+        ContainerURL containerURL = serviceURL.createContainerURL(containerName);
+
+        /*
+        Create a URL that references a to-be-created blob in your Azure Storage account's container.
+        This returns a BlockBlobURL object that wraps the blob's URl and a request pipeline
+        (inherited from containerURL). Note that blob names can be mixed case.
+         */
+        BlockBlobURL blobURL = containerURL.createBlockBlobURL(blobName);
+        /*
+        Set the desired SAS signature values and sign them with the shared key credentials to get the SAS query
+        parameters.
+         */
+
+        // Use your Storage account's name and key to create a credential object; this is required to sign a SAS.
+        SharedKeyCredentials credential = new SharedKeyCredentials(accountName, accountKey);
+
+        AccountSASSignatureValues values = new AccountSASSignatureValues();
+        values.withProtocol(SASProtocol.HTTPS_ONLY) // Users MUST use HTTPS (not HTTP).
+                .withExpiryTime(OffsetDateTime.now().plusDays(2)); // 2 days before expiration.
+
+        AccountSASPermission permission = new AccountSASPermission()
+                .withRead(true)
+                .withList(true);
+        values.withPermissions(permission.toString());
+
+        AccountSASService service = new AccountSASService()
+                .withBlob(true);
+        values.withServices(service.toString());
+
+        AccountSASResourceType resourceType = new AccountSASResourceType()
+                .withContainer(true)
+                .withObject(true);
+        values.withResourceTypes(resourceType.toString());
+
+        SASQueryParameters params = values.generateSASQueryParameters(credential);
+
+        // Calling encode will generate the query string.
+        String encodedParams = params.encode();
+
+        String urlToSendToSomeone = String.format(Locale.ROOT, "%s%s",
+                blobURL.toString(), encodedParams);
+
+        return urlToSendToSomeone;
 
     }
 }
