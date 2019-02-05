@@ -2,6 +2,7 @@ package com.devvsda.tools.azureswissknife.services;
 
 import com.devsda.tools.azureswissknife.services.BlobService;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ public class BlobServiceTest {
     }
 
 
+    @Ignore
     @Test
     public void createContainerTest() {
         String accountName = "cricket2";
@@ -28,6 +30,8 @@ public class BlobServiceTest {
         blobService.createContainer(accountName, accountKey, containerName);
     }
 
+
+    @Ignore
     @Test
     public void uploadBlobTest() throws IOException {
         String accountName = "cricket2";
@@ -41,6 +45,7 @@ public class BlobServiceTest {
         blobService.uploadBlob(accountName, accountKey, containerName, blockName, imageLocation);
     }
 
+    @Ignore
     @Test
     public void generateBlobLinkTest() throws InvalidKeyException{
 
